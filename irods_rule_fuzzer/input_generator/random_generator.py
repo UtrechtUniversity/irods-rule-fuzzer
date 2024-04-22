@@ -9,7 +9,8 @@ class RandomInputGenerator:
 
     def generate_input(self, endpoint):
         values = []
-        for n in range(0, endpoint["Number of input parameters"]):
+        number_parameters = endpoint["Number of input parameters"] if endpoint["Endpoint type"] == "regular_legacy" else endpoint["Number of parameters"]
+        for n in range(0, number_parameters):
             values.append(("param" + str(n), self._get_random_string(4, 16),))
         return OrderedDict(values)
 
@@ -17,6 +18,6 @@ class RandomInputGenerator:
         length = random.randint(min_length, max_length)
         # We use a custom punctuation array, because of the need to escape
         # some characters when used in rules
-        punctuation = ["!", "(", ")", "[", "]", "~", "?", "\\*", "#", "\\$", "\\\"", "=", "<", ">", "_", "-", "|", "^", "&", "@", ":", ";", ".", "%"]
+        punctuation = ["!", "(", ")", "[", "]", "~", "?", "#", "=", "<", ">", "_", "-", "|", "^", "&", "@", ":", ";", ".", "%"]
         chars = list(string.ascii_letters + string.digits) + punctuation
         return (''.join(random.choice(chars) for _ in range(length)))

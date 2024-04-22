@@ -1,0 +1,4 @@
+Endpoint name,Endpoint type,Number of parameters,Number of input parameters,Number of output parameters,Input parameter names
+uuGroupExists,regular_legacy,2,1,1,
+uuUserExists,regular_legacy,2,1,1,
+uuUserNameIsAvailable,regular_legacy,3,1,2,
