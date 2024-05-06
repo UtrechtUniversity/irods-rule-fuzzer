@@ -113,9 +113,9 @@ def main(args):
                 print("Unknown endpoint type: " + fuzz_data["Endpoint"]["Endpoint type"])
 
         except Exception as e:
-            call_fuzzmarker(session, fuzz_data["Marker"] + ":Exception occurred: " + str(e.code))
+            call_fuzzmarker(session, fuzz_data["Marker"] + ":Exception occurred: " + get_irods_exception_description(e))
             if args.print_output:
-                print("Exception occurred: " + str(e.code))
+                print("Exception occurred: " + get_irods_exception_description(e))
 
         if result is not None:
             result_str = output_arguments_to_str(fuzz_data["Endpoint"]["Endpoint type"], result)
@@ -128,6 +128,20 @@ def main(args):
         call_fuzzmarker(session, fuzz_data["Marker"] + ":end")
         if args.sleep_time > 0:
             time.sleep(args.sleep_time)
+
+
+def get_irods_exception_description(e):
+    return str(type(e)) + ":" + str(e)
+
+
+def get_irods_exception_code(e):
+    if type(e) is KeyError:
+        return str(e)
+    else:
+        try:
+            return e.code
+        except KeyError:
+            return None
 
 
 def output_arguments_to_str(endpoint_type, arguments):
@@ -165,8 +179,8 @@ def guess_missing_endpoint_parameters(session, endpoints_in):
                               number_of_output_parameters,
                               "irods_rule_engine_plugin-irods_rule_language-instance")
                 except Exception as e:
-                    print("Exception code = " + str(e.code))
-                    if e.code in ("-1201000", "-1211000"):
+                    exception_code = get_irods_exception_code(e)
+                    if exception_code in ("-1201000", "-1211000", "-1234000"):
                         parser_error = True
                 discovery_message = f"Parameter discovery for {endpoint_name} " + \
                                     f"(I-O {str(number_of_input_parameters)}-{str(number_of_output_parameters)}) :" + \
