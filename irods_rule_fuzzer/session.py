@@ -25,7 +25,7 @@ def setup_session(ca_file, use_ssl=True):
             password = password_obfuscation.decode(scrambled_password)
     except OSError:
         print(
-            "Could not open {} .".format(scrambled_password),
+            "Could not open {} .".format(irodsA),
             file=sys.stderr
         )
         password = getpass(prompt="Please provide your irods password:")
