@@ -238,7 +238,7 @@ def guess_missing_endpoint_parameters(session, endpoints_in, args):
                             f"Parameter discovery for endpoint {endpoint_name} finished.",
                             verbose=args.verbose)
         else:
-            endpoints_out.append(endpoint_out)
+            endpoints_out.append(endpoint)
     call_fuzzmarker(session,
                     "Parameter discovery ended.",
                     verbose=args.verbose)
