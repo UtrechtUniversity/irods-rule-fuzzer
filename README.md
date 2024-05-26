@@ -35,10 +35,8 @@ irods-rule-fuzzer --print-output --endpoint-csv-file examples/example-regular-le
 ```
 
 ```
-usage: irods-rule-fuzzer [-h] [--no-ssl] [--print-output]
-                         [--sleep-time SLEEP_TIME] [--ca-file CA_FILE]
-                         [--yoda-ruleset-dir YODA_RULESET_DIR]
-                         [--endpoint-csv-file ENDPOINT_CSV_FILE]
+usage: irods-rule-fuzzer [-h] [--no-ssl] [--print-output] [--sleep-time SLEEP_TIME] [--ca-file CA_FILE]
+                         [--yoda-ruleset-dir YODA_RULESET_DIR] [--endpoint-csv-file ENDPOINT_CSV_FILE] [-v]
 
 A fuzzer for iRODS rules
 
@@ -47,14 +45,13 @@ optional arguments:
   --no-ssl              Do not use SSL/TLS when connecting to iRODS
   --print-output        Print output of rules
   --sleep-time SLEEP_TIME
-                        time to sleep between rule invocations, in
-                        milliseconds
-  --ca-file CA_FILE     Certificate authority file for validating iRODS server
-                        certificate
+                        time to sleep between rule invocations, in milliseconds
+  --ca-file CA_FILE     Certificate authority file for validating iRODS server certificate
   --yoda-ruleset-dir YODA_RULESET_DIR
                         Directory with Yoda ruleset to extract endpoints from
   --endpoint-csv-file ENDPOINT_CSV_FILE
                         CSV file with endpoints to test
+  -v, --verbose         Print information about fuzzing actions.
 ```
 
 At a high level, the fuzzer works as follows:

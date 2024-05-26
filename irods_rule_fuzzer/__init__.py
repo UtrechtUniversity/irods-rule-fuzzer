@@ -2,6 +2,7 @@
 
 import argparse
 from collections import OrderedDict
+import logging
 import random
 import time
 import sys
@@ -32,6 +33,8 @@ def _get_args():
                         help="Directory with Yoda ruleset to extract endpoints from")
     parser.add_argument("--endpoint-csv-file", default=None, required=False,
                         help="CSV file with endpoints to test")
+    parser.add_argument("-v", "--verbose", action='store_true', default=False,
+                        help="Print information about fuzzing actions.")
 
     args = parser.parse_args()
 
@@ -54,10 +57,25 @@ def collect_endpoints(args):
 
 
 def entry():
+    setup_logger()
     try:
         main(_get_args())
     except KeyboardInterrupt:
         print("Script interrupted by user.", file=sys.stderr)
+
+
+def setup_logger():
+    logging.basicConfig()
+    root_logger = logging.getLogger()
+
+    for handler in root_logger.handlers:
+        root_logger.removeHandler(handler)
+
+    new_handler = logging.StreamHandler()
+    new_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    root_logger.addHandler(new_handler)
+
+    root_logger.setLevel(logging.INFO)
 
 
 def main(args):
@@ -67,15 +85,17 @@ def main(args):
     if len(endpoints) == 0:
         print("Error: no endpoints found.")
         sys.exit(1)
+    elif args.verbose:
+        logging.info("Endpoint discovery finished.")
 
     try:
-        call_fuzzmarker(session, "Fuzzer starting...")
+        call_fuzzmarker(session, "Fuzzer starting...", verbose=args.verbose)
     except NO_RULE_OR_MSI_FUNCTION_FOUND_ERR:
         print("Error: The fuzzCheck rule was not found. It needs to be installed in order to run the fuzzer.\n"
               + "See README.md for details.")
         sys.exit(1)
 
-    endpoints_with_extra_data = guess_missing_endpoint_parameters(session, endpoints)
+    endpoints_with_extra_data = guess_missing_endpoint_parameters(session, endpoints, args)
 
     input_generator = RandomInputGenerator()
     yoda_api_translator = YodaAPIInputTranslator()
@@ -92,12 +112,15 @@ def main(args):
         else:
             fuzz_data["Arguments"] = fuzz_data["Initial arguments"]
 
-        call_fuzzmarker(session, fuzz_data["Marker"] + ":begin")
+        call_fuzzmarker(session,
+                        fuzz_data["Marker"] + ":begin",
+                        verbose=args.verbose)
 
         call_fuzzmarker(session,
                         fuzz_data["Marker"] + ":"
                         + fuzz_data["Endpoint"]["Endpoint name"] + " called with arguments"
-                        + str(fuzz_data["Initial arguments"]))
+                        + str(fuzz_data["Initial arguments"]),
+                        verbose=args.verbose)
         try:
             result = None
             if fuzz_data["Endpoint"]["Endpoint type"] == "regular_python":
@@ -122,19 +145,25 @@ def main(args):
                 print("Unknown endpoint type: " + fuzz_data["Endpoint"]["Endpoint type"])
 
         except Exception as e:
-            call_fuzzmarker(session, fuzz_data["Marker"] + ":Exception occurred: " + get_irods_exception_description(e))
+            call_fuzzmarker(session,
+                            fuzz_data["Marker"] + ":Exception occurred: " + get_irods_exception_description(e),
+                            verbose=args.verbose)
             if args.print_output:
                 print("Exception occurred: " + get_irods_exception_description(e))
 
         if result is not None:
             result_str = output_arguments_to_str(fuzz_data["Endpoint"]["Endpoint type"], result)
-            call_fuzzmarker(session, fuzz_data["Marker"] + "Rule output: " + result_str)
+            call_fuzzmarker(session,
+                            fuzz_data["Marker"] + "Rule output: " + result_str,
+                            verbose=args.verbose)
             if args.print_output:
                 endpoint_name = fuzz_data["Endpoint"]["Endpoint name"]
                 str_arguments = str(fuzz_data["Initial arguments"])
                 print(f"Rule output for {endpoint_name}({str_arguments}): {result_str}")
 
-        call_fuzzmarker(session, fuzz_data["Marker"] + ":end")
+        call_fuzzmarker(session,
+                        fuzz_data["Marker"] + ":end",
+                        verbose=args.verbose)
         if args.sleep_time > 0:
             time.sleep(args.sleep_time)
 
@@ -164,9 +193,9 @@ def output_arguments_to_str(endpoint_type, arguments):
         return str(arguments)
 
 
-def guess_missing_endpoint_parameters(session, endpoints_in):
+def guess_missing_endpoint_parameters(session, endpoints_in, args):
     endpoints_out = []
-    call_fuzzmarker(session, "Parameter type discovery starting")
+    call_fuzzmarker(session, "Parameter discovery starting")
     for endpoint in endpoints_in:
         if (endpoint["Endpoint type"] == "regular_legacy"
             and "Number of input parameters" not in endpoint
@@ -174,7 +203,9 @@ def guess_missing_endpoint_parameters(session, endpoints_in):
             endpoint_name = endpoint["Endpoint name"]
             endpoint_out = endpoint.copy()
             number_of_parameters = endpoint["Number of parameters"]
-            call_fuzzmarker(session, f"Parameter type discovery for endpoint {endpoint_name} starting.")
+            call_fuzzmarker(session,
+                            f"Parameter discovery for endpoint {endpoint_name} starting.",
+                            verbose=args.verbose)
             for number_of_output_parameters in range(number_of_parameters + 1):
                 input_parameters = []
                 number_of_input_parameters = number_of_parameters - number_of_output_parameters
@@ -192,26 +223,35 @@ def guess_missing_endpoint_parameters(session, endpoints_in):
                     if exception_code in ("-1201000", "-1211000", "-1234000"):
                         parser_error = True
                 discovery_message = f"Parameter discovery for {endpoint_name} " + \
-                                    f"(I-O {str(number_of_input_parameters)}-{str(number_of_output_parameters)}) :" + \
-                                    (" failed " if parser_error else "succeeded")
-                call_fuzzmarker(session, discovery_message)
+                                    f"({str(number_of_input_parameters)} input and " + \
+                                    f"{str(number_of_output_parameters)} output param(s)) :" + \
+                                    (" failed " if parser_error else " succeeded")
+                call_fuzzmarker(session,
+                                discovery_message,
+                                verbose=args.verbose)
                 if not parser_error:
                     endpoint_out["Number of input parameters"] = number_of_input_parameters
                     endpoint_out["Number of output parameters"] = number_of_output_parameters
                     endpoints_out.append(endpoint_out)
                     break
-            call_fuzzmarker(session, f"Parameter type discovery for endpoint {endpoint_name} finished.")
+            call_fuzzmarker(session,
+                            f"Parameter discovery for endpoint {endpoint_name} finished.",
+                            verbose=args.verbose)
         else:
             endpoints_out.append(endpoint_out)
-    call_fuzzmarker(session, "Parameter type discovery ended.")
+    call_fuzzmarker(session,
+                    "Parameter discovery ended.",
+                    verbose=args.verbose)
     return endpoints_out
 
 
-def call_fuzzmarker(session, marker):
+def call_fuzzmarker(session, marker, verbose=False):
     """Calls fuzz marker function as a bookmark to relate log messages to fuzzing actions.
        This function also servers as a check to see if iRODS is still responding."""
     parms = OrderedDict([
         ('logmarker', marker)])
+    if verbose:
+        logging.info(marker)
     [out] = call_rule(session, 'fuzzCheck', parms, 1, "irods_rule_engine_plugin-irods_rule_language-instance")
     if out != "OK":
         print("Fuzzing rule not okay. Terminating.")
