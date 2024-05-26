@@ -7,6 +7,8 @@ import time
 import sys
 import uuid
 
+from irods.exception import NO_RULE_OR_MSI_FUNCTION_FOUND_ERR
+
 from irods_rule_fuzzer.endpoint_discovery.csv_import import CSVImportEndpointDiscovery
 from irods_rule_fuzzer.endpoint_discovery.yoda_ruleset import YodaRulesetEndpointDiscovery
 from irods_rule_fuzzer.input_generator.random_generator import RandomInputGenerator
@@ -64,6 +66,13 @@ def main(args):
 
     if len(endpoints) == 0:
         print("Error: no endpoints found.")
+        sys.exit(1)
+
+    try:
+        call_fuzzmarker(session, "Fuzzer starting...")
+    except NO_RULE_OR_MSI_FUNCTION_FOUND_ERR:
+        print("Error: The fuzzCheck rule was not found. It needs to be installed in order to run the fuzzer.\n"
+              + "See README.md for details.")
         sys.exit(1)
 
     endpoints_with_extra_data = guess_missing_endpoint_parameters(session, endpoints)
