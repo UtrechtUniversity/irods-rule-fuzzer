@@ -1,0 +1,4 @@
+Endpoint name,Endpoint type,Number of parameters,Number of input parameters,Number of output parameters,Input parameter names
+msiGetObjType,regular_legacy,2,1,1,
+msiCollCreate,regular_legacy,3,2,1,
+msiDataObjCreate,regular_legacy,3,2,1,

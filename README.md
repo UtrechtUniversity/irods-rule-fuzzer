@@ -28,11 +28,25 @@ also serves as a keepalive check.
 
 ## Usage
 
-Simple example to test a few example rules in Yoda:
+Example to test a few built-in iRODS microservices:
 
 ```
-irods-rule-fuzzer --print-output --endpoint-csv-file examples/example-regular-legacy.csv
+irods-rule-fuzzer --verbose --endpoint-csv-file examples/example-irods-native-msvc.csv
 ```
+
+Example to test a few specific rules in Yoda:
+
+```
+irods-rule-fuzzer --verbose --endpoint-csv-file examples/example-regular-legacy.csv
+```
+
+Example to automatically discover rules on a Yoda server:
+
+```
+irods-rule-fuzzer --verbose --yoda-ruleset-dir /etc/irods/yoda-ruleset
+```
+
+Full usage instructions:
 
 ```
 usage: irods-rule-fuzzer [-h] [--no-ssl] [--print-output] [--sleep-time SLEEP_TIME] [--ca-file CA_FILE]
