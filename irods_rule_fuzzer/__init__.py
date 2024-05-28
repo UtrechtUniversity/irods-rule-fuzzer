@@ -145,11 +145,13 @@ def main(args):
                 print("Unknown endpoint type: " + fuzz_data["Endpoint"]["Endpoint type"])
 
         except Exception as e:
+            short_description = str(get_irods_exception_code(e))
+            long_description = get_irods_exception_description(e)
             call_fuzzmarker(session,
-                            fuzz_data["Marker"] + ":Exception occurred: " + get_irods_exception_description(e),
+                            fuzz_data["Marker"] + ":Exception occurred: " + short_description,
                             verbose=args.verbose)
-            if args.print_output:
-                print("Exception occurred: " + get_irods_exception_description(e))
+            if args.print_output or args.verbose:
+                print("Exception information: " + long_description)
 
         if result is not None:
             result_str = output_arguments_to_str(fuzz_data["Endpoint"]["Endpoint type"], result)
