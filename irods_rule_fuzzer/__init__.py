@@ -156,7 +156,7 @@ def main(args):
         if result is not None:
             result_str = output_arguments_to_str(fuzz_data["Endpoint"]["Endpoint type"], result)
             call_fuzzmarker(session,
-                            fuzz_data["Marker"] + "Rule output: " + result_str,
+                            fuzz_data["Marker"] + ":Rule output: " + result_str,
                             verbose=args.verbose)
             if args.print_output:
                 endpoint_name = fuzz_data["Endpoint"]["Endpoint name"]
