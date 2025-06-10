@@ -5,7 +5,7 @@ setup(
     author_email="s.t.snel@uu.nl",
     description=('A rule-based fuzzer for testing iRODS rules'),
     install_requires=[
-        'python-irodsclient==2.0.0',
+        'python-irodsclient==3.1.1',
     ],
     name='irods_rule_fuzzer',
     packages=['irods_rule_fuzzer',
